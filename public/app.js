@@ -100,7 +100,7 @@ function toggleProductModal() {
   document.getElementById('productModal').classList.toggle('hidden');
 }
 
-// --- TRAVA DE ESTOQUE NO FRONTEND ---
+// --- CONTROLE DE ESTOQUE NO CARRINHO ---
 function addToCart(id) {
   const prod = products.find(p => p.id === id);
   if (!prod) return;
@@ -143,6 +143,17 @@ function changeQtd(id, delta) {
   }
 }
 
+// --- MÉTODOS DE PAGAMENTO ---
+function togglePaymentFields(method) {
+  const cardFields = document.getElementById('cartaoFields');
+  if (!cardFields) return;
+  if (method === 'Cartao') {
+    cardFields.classList.remove('hidden');
+  } else {
+    cardFields.classList.add('hidden');
+  }
+}
+
 function updateCartUI() {
   const list = document.getElementById('cartItemsList');
   const count = cart.reduce((acc, i) => acc + i.qtd, 0);
@@ -175,6 +186,17 @@ function updateCartUI() {
 async function checkout() {
   if (cart.length === 0) return alert('Seu carrinho está vazio!');
 
+  const paymentInput = document.querySelector('input[name="pagamento"]:checked');
+  const paymentMethod = paymentInput ? paymentInput.value : 'PIX';
+
+  if (paymentMethod === 'Cartao') {
+    const cardNum = document.getElementById('cardNumber').value;
+    if (!cardNum) {
+      alert('Por favor, preencha os dados do cartão para simular o pagamento.');
+      return;
+    }
+  }
+
   const total = cart.reduce((acc, i) => acc + (i.preco * i.qtd), 0);
 
   try {
@@ -187,11 +209,11 @@ async function checkout() {
     const data = await res.json();
 
     if (res.ok) {
-      alert('Pedido realizado com sucesso!');
+      alert(`Pedido realizado com sucesso via ${paymentMethod}!`);
       cart = [];
       updateCartUI();
       toggleCartModal();
-      fetchProducts(); // Atualiza o estoque na tela
+      fetchProducts();
     } else {
       alert(data.error || 'Erro ao processar pedido.');
     }

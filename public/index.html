@@ -99,7 +99,8 @@
       <div class="p-6">
         <span id="modalCategoria" class="text-xs font-semibold uppercase text-brandOrange tracking-wider"></span>
         <h3 id="modalNome" class="text-2xl font-bold text-slate-800 mt-1 mb-2"></h3>
-        <p id="modalDescricao" class="text-slate-600 text-sm mb-6 leading-relaxed"></p>
+        <p id="modalDescricao" class="text-slate-600 text-sm mb-4 leading-relaxed"></p>
+        <p id="modalEstoque" class="text-xs font-semibold text-slate-500 mb-6"></p>
         <div class="flex items-center justify-between">
           <span id="modalPreco" class="text-2xl font-extrabold text-brandDark"></span>
           <button id="modalAddBtn" class="bg-brandOrange hover:bg-orange-600 text-white px-6 py-2.5 rounded-lg font-bold transition flex items-center gap-2">
@@ -110,7 +111,7 @@
     </div>
   </div>
 
-  <!-- Cart Modal -->
+  <!-- Cart Modal with Payment Options -->
   <div id="cartModal" class="fixed inset-0 bg-black/60 hidden z-50 flex justify-end transition-opacity">
     <div class="bg-white w-full max-w-md h-full flex flex-col shadow-2xl">
       <div class="p-4 bg-brandDark text-white flex justify-between items-center">
@@ -122,8 +123,35 @@
         <!-- Itens do Carrinho -->
       </div>
 
-      <div class="p-4 border-t bg-slate-50">
-        <div class="flex justify-between items-center mb-4">
+      <!-- Payment Section -->
+      <div class="p-4 border-t bg-slate-50 space-y-3">
+        <h4 class="font-bold text-xs uppercase text-slate-600 tracking-wider">Forma de Pagamento</h4>
+        <div class="grid grid-cols-3 gap-2">
+          <label class="border rounded-lg p-2 text-center cursor-pointer hover:border-brandOrange text-xs font-semibold flex flex-col items-center gap-1 bg-white">
+            <input type="radio" name="pagamento" value="PIX" checked onclick="togglePaymentFields('PIX')">
+            <i class="fa-solid fa-qrcode text-brandOrange text-base"></i> PIX
+          </label>
+          <label class="border rounded-lg p-2 text-center cursor-pointer hover:border-brandOrange text-xs font-semibold flex flex-col items-center gap-1 bg-white">
+            <input type="radio" name="pagamento" value="Boleto" onclick="togglePaymentFields('Boleto')">
+            <i class="fa-solid fa-barcode text-brandOrange text-base"></i> Boleto
+          </label>
+          <label class="border rounded-lg p-2 text-center cursor-pointer hover:border-brandOrange text-xs font-semibold flex flex-col items-center gap-1 bg-white">
+            <input type="radio" name="pagamento" value="Cartao" onclick="togglePaymentFields('Cartao')">
+            <i class="fa-solid fa-credit-card text-brandOrange text-base"></i> Cartão
+          </label>
+        </div>
+
+        <!-- Campos de simulação do cartão -->
+        <div id="cartaoFields" class="hidden space-y-2 pt-2 border-t">
+          <input type="text" id="cardName" placeholder="Nome no Cartão" class="w-full p-2 border rounded text-xs bg-white">
+          <input type="text" id="cardNumber" placeholder="Número do Cartão (qualquer número)" class="w-full p-2 border rounded text-xs bg-white">
+          <div class="grid grid-cols-2 gap-2">
+            <input type="text" id="cardVal" placeholder="Validade (MM/AA)" class="p-2 border rounded text-xs bg-white">
+            <input type="text" id="cardCvv" placeholder="CVV" class="p-2 border rounded text-xs bg-white">
+          </div>
+        </div>
+
+        <div class="flex justify-between items-center pt-2">
           <span class="text-slate-600 font-medium">Total:</span>
           <span id="cartTotal" class="text-2xl font-bold text-brandDark">R$ 0,00</span>
         </div>
@@ -134,7 +162,7 @@
     </div>
   </div>
 
-  <!-- Admin Modal (CRUD Completo) -->
+  <!-- Admin Modal -->
   <div id="adminModal" class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
       <div class="p-4 bg-brandDark text-white flex justify-between items-center">
@@ -166,7 +194,6 @@
           <button type="submit" id="adminSubmitBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-bold text-sm w-full transition">Cadastrar Produto</button>
         </form>
 
-        <!-- Lista de Produtos para Editar/Excluir -->
         <div>
           <h4 class="font-bold text-slate-700 mb-3">Produtos Cadastrados</h4>
           <div id="adminProductsList" class="space-y-2 max-h-64 overflow-y-auto pr-1">
@@ -181,11 +208,11 @@
   <div id="ordersModal" class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
       <div class="p-4 bg-brandDark text-white flex justify-between items-center">
-        <h3 class="text-lg font-bold flex items-center gap-2"><i class="fa-solid fa-list-check text-brandOrange"></i> Acompanhamento de Pedidos (Admin / Cliente)</h3>
+        <h3 class="text-lg font-bold flex items-center gap-2"><i class="fa-solid fa-list-check text-brandOrange"></i> Acompanhamento de Pedidos</h3>
         <button onclick="toggleOrdersModal()" class="text-slate-400 hover:text-white text-xl">&times;</button>
       </div>
       <div id="ordersList" class="p-6 overflow-y-auto space-y-4">
-        <!-- Injetado por JS -->
+        <!-- Injetado via JS -->
       </div>
     </div>
   </div>
