@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TechStore - E-commerce Web2</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brandDark: '#1E293B',
+            brandOrange: '#F97316',
+            brandLight: '#F8FAFC'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-brandLight text-slate-800 flex flex-col min-h-screen">
+
+  <!-- Header -->
+  <header class="bg-brandDark text-white sticky top-0 z-40 shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <i class="fa-solid fa-store text-brandOrange text-3xl"></i>
+        <h1 class="text-2xl font-bold tracking-tight">TechStore</h1>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="w-full md:w-1/2 flex items-center bg-slate-700 rounded-lg overflow-hidden border border-slate-600 focus-within:border-brandOrange">
+        <input type="text" id="searchInput" oninput="filterProducts()" placeholder="Pesquisar produtos na loja..." class="w-full px-4 py-2 bg-transparent text-white focus:outline-none">
+        <button class="px-4 text-slate-400 hover:text-white"><i class="fa-solid fa-magnifying-glass"></i></button>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-6">
+        <button onclick="toggleAdminModal()" class="text-slate-300 hover:text-brandOrange flex items-center gap-2 text-sm font-medium">
+          <i class="fa-solid fa-user-gear text-lg"></i> Admin Panel
+        </button>
+        <button onclick="toggleOrdersModal()" class="text-slate-300 hover:text-brandOrange flex items-center gap-2 text-sm font-medium">
+          <i class="fa-solid fa-box text-lg"></i> Meus Pedidos
+        </button>
+        <button onclick="toggleCartModal()" class="relative bg-brandOrange hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 transition">
+          <i class="fa-solid fa-cart-shopping"></i> Carrinho
+          <span id="cartCount" class="bg-white text-brandDark text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation / Categories -->
+  <nav class="bg-slate-900 text-slate-300 border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 flex gap-6 overflow-x-auto py-3 text-sm font-medium">
+      <button onclick="selectCategory('Todas')" class="category-btn hover:text-brandOrange text-brandOrange font-bold">Todas as Categorias</button>
+      <button onclick="selectCategory('Eletrônicos')" class="category-btn hover:text-brandOrange">Eletrônicos</button>
+      <button onclick="selectCategory('Vestuário')" class="category-btn hover:text-brandOrange">Vestuário</button>
+      <button onclick="selectCategory('Livros')" class="category-btn hover:text-brandOrange">Livros</button>
+      <button onclick="selectCategory('Casa')" class="category-btn hover:text-brandOrange">Casa & Lar</button>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="bg-gradient-to-r from-slate-900 to-brandDark text-white py-8 border-b border-slate-700">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6">
+      <div>
+        <h2 class="text-3xl font-extrabold mb-2">As melhores ofertas em Tecnologia & Estilo</h2>
+        <p class="text-slate-400">Projeto prático desenvolvido para a disciplina de Desenvolvimento Web 2 (IFSP).</p>
+      </div>
+      <div class="bg-brandOrange/10 border border-brandOrange/30 text-brandOrange px-4 py-2 rounded-lg text-xs uppercase font-mono">
+        Arquitetura Full Stack MVC / Clean Arch
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content - Products Grid -->
+  <main class="max-w-7xl mx-auto px-4 py-8 flex-grow">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+        <i class="fa-solid fa-boxes-stacked text-brandOrange"></i> Produtos em Destaque
+      </h3>
+      <span id="productCounter" class="text-sm text-slate-5-00">Carregando produtos...</span>
+    </div>
+
+    <!-- Grid -->
+    <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <!-- Injetado via JS -->
+    </div>
+  </main>
+
+  <!-- Cart Modal -->
+  <div id="cartModal" class="fixed inset-0 bg-black/60 hidden z-50 flex justify-end transition-opacity">
+    <div class="bg-white w-full max-w-md h-full flex flex-col shadow-2xl">
+      <div class="p-4 bg-brandDark text-white flex justify-between items-center">
+        <h3 class="text-lg font-bold flex items-center gap-2"><i class="fa-solid fa-cart-shopping text-brandOrange"></i> Meu Carrinho</h3>
+        <button onclick="toggleCartModal()" class="text-slate-400 hover:text-white text-xl">&times;</button>
+      </div>
+
+      <div id="cartItemsList" class="flex-grow p-4 overflow-y-auto divide-y divide-slate-100">
+        <!-- Itens do Carrinho -->
+      </div>
+
+      <div class="p-4 border-t bg-slate-50">
+        <div class="flex justify-between items-center mb-4">
+          <span class="text-slate-600 font-medium">Total:</span>
+          <span id="cartTotal" class="text-2xl font-bold text-brandDark">R$ 0,00</span>
+        </div>
+        <button onclick="checkout()" class="w-full bg-brandOrange hover:bg-orange-600 text-white py-3 rounded-lg font-bold transition flex justify-center items-center gap-2">
+          <i class="fa-solid fa-credit-card"></i> Finalizar Compra
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Modal (CRUD) -->
+  <div id="adminModal" class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+      <div class="p-4 bg-brandDark text-white flex justify-between items-center">
+        <h3 class="text-lg font-bold flex items-center gap-2"><i class="fa-solid fa-wrench text-brandOrange"></i> Gestão de Produtos (Admin)</h3>
+        <button onclick="toggleAdminModal()" class="text-slate-400 hover:text-white text-xl">&times;</button>
+      </div>
+      <div class="p-6 overflow-y-auto space-y-6">
+        <form id="productForm" onsubmit="saveProduct(event)" class="space-y-4 bg-slate-50 p-4 rounded-lg border">
+          <h4 class="font-bold text-slate-700">Cadastrar Novo Produto</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input type="text" id="prodNome" placeholder="Nome do Produto" required class="p-2 border rounded text-sm w-full">
+            <input type="number" step="0.01" id="prodPreco" placeholder="Preço (ex: 99.90)" required class="p-2 border rounded text-sm w-full">
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <select id="prodCategoria" class="p-2 border rounded text-sm w-full">
+              <option value="1">Eletrônicos</option>
+              <option value="2">Vestuário</option>
+              <option value="3">Livros</option>
+              <option value="4">Casa</option>
+            </select>
+            <input type="number" id="prodEstoque" placeholder="Quantidade em Estoque" required class="p-2 border rounded text-sm w-full">
+          </div>
+          <input type="text" id="prodImagem" placeholder="URL da Imagem (opcional)" class="p-2 border rounded text-sm w-full">
+          <textarea id="prodDescricao" placeholder="Descrição curta..." class="p-2 border rounded text-sm w-full h-20"></textarea>
+          <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-bold text-sm w-full transition">Cadastrar Produto</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Orders Modal -->
+  <div id="ordersModal" class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+      <div class="p-4 bg-brandDark text-white flex justify-between items-center">
+        <h3 class="text-lg font-bold flex items-center gap-2"><i class="fa-solid fa-list-check text-brandOrange"></i> Histórico de Pedidos</h3>
+        <button onclick="toggleOrdersModal()" class="text-slate-400 hover:text-white text-xl">&times;</button>
+      </div>
+      <div id="ordersList" class="p-6 overflow-y-auto space-y-4">
+        <!-- Injetado por JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-brandDark text-slate-400 py-6 border-t border-slate-800 text-center text-sm">
+    <div class="max-w-7xl mx-auto px-4">
+      <p>Proposta Acadêmica - Disciplina de Desenvolvimento Web 2 (IFSP) | Prof. Juliano Blanco</p>
+      <p class="text-xs text-slate-500 mt-1">Alunos: Nathan de Oliveira Fonseca e Grupo</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
