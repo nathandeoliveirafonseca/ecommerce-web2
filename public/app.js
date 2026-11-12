@@ -14,20 +14,27 @@ async function fetchProducts() {
     renderAdminProductsList();
   } catch (err) {
     console.error('Erro ao carregar produtos:', err);
+    document.getElementById('productCounter').innerText = 'Erro ao carregar produtos.';
   }
 }
 
 function renderProducts() {
   const grid = document.getElementById('productsGrid');
-  const search = document.getElementById('searchInput').value.toLowerCase();
+  const searchInput = document.getElementById('searchInput');
+  const search = searchInput ? searchInput.value.toLowerCase() : '';
   
   const filtered = products.filter(p => {
     const matchesCat = selectedCategory === 'Todas' || p.categoria_nome === selectedCategory;
-    const matchesSearch = p.nome.toLowerCase().includes(search) || p.descricao.toLowerCase().includes(search);
+    const matchesSearch = p.nome.toLowerCase().includes(search) || (p.descricao && p.descricao.toLowerCase().includes(search));
     return matchesCat && matchesSearch;
   });
 
-  document.getElementById('productCounter').innerText = `${filtered.length} produto(s) encontrado(s)`;
+  const counter = document.getElementById('productCounter');
+  if (counter) {
+    counter.innerText = `${filtered.length} produto(s) encontrado(s)`;
+  }
+
+  if (!grid) return;
 
   if (filtered.length === 0) {
     grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-500 font-medium">Nenhum produto encontrado.</div>`;
@@ -40,7 +47,7 @@ function renderProducts() {
       <div class="p-4 flex flex-col flex-grow">
         <span class="text-xs font-semibold uppercase text-brandOrange tracking-wider">${p.categoria_nome || 'Geral'}</span>
         <h4 class="font-bold text-slate-800 text-base mt-1 mb-1 line-clamp-1 cursor-pointer hover:text-brandOrange" onclick="openProductModal(${p.id})">${p.nome}</h4>
-        <p class="text-slate-500 text-xs mb-2 line-clamp-2 flex-grow">${p.descricao}</p>
+        <p class="text-slate-500 text-xs mb-2 line-clamp-2 flex-grow">${p.descricao || ''}</p>
         <span class="text-xs font-semibold text-slate-400 mb-4">Estoque disponível: ${p.estoque} un.</span>
         <div class="flex items-center justify-between mt-auto">
           <span class="text-lg font-extrabold text-brandDark">R$ ${p.preco.toFixed(2).replace('.', ',')}</span>
@@ -92,7 +99,6 @@ function toggleProductModal() {
   document.getElementById('productModal').classList.toggle('hidden');
 }
 
-// --- TRAVA DE ESTOQUE NO CARRINHO ---
 function addToCart(id) {
   const prod = products.find(p => p.id === id);
   if (!prod) return;
@@ -137,6 +143,7 @@ function changeQtd(id, delta) {
 
 function togglePaymentFields(method) {
   const cardFields = document.getElementById('cartaoFields');
+  if (!cardFields) return;
   if (method === 'Cartao') {
     cardFields.classList.remove('hidden');
   } else {
@@ -176,7 +183,9 @@ function updateCartUI() {
 async function checkout() {
   if (cart.length === 0) return alert('Seu carrinho está vazio!');
   
-  const paymentMethod = document.querySelector('input[name="pagamento"]:checked').value;
+  const selectedPayment = document.querySelector('input[name="pagamento"]:checked');
+  const paymentMethod = selectedPayment ? selectedPayment.value : 'PIX';
+
   if (paymentMethod === 'Cartao') {
     const cardNum = document.getElementById('cardNumber').value;
     if (!cardNum) {
@@ -207,7 +216,7 @@ async function checkout() {
   }
 }
 
-// --- FUNÇÕES DO PAINEL ADMIN (CRIAR, EDITAR E EXCLUIR) ---
+// --- ADMIN ---
 
 function openAdminModal() {
   resetAdminForm();
@@ -371,7 +380,7 @@ async function updateOrderStatus(orderId, newStatus) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: newStatus })
     });
-    if (res.ok) {
+    if, (res.ok) {
       loadOrders();
     }
   } catch (err) {
