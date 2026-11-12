@@ -98,4 +98,106 @@
       <img id="modalImg" src="" alt="" class="w-full h-64 object-contain p-4 bg-white border-b border-slate-100">
       <div class="p-6">
         <span id="modalCategoria" class="text-xs font-semibold uppercase text-brandOrange tracking-wider"></span>
-        <h
+        <h3 id="modalNome" class="text-2xl font-bold text-slate-800 mt-1 mb-2"></h3>
+        <p id="modalDescricao" class="text-slate-600 text-sm mb-6 leading-relaxed"></p>
+        <div class="flex items-center justify-between">
+          <span id="modalPreco" class="text-2xl font-extrabold text-brandDark"></span>
+          <button id="modalAddBtn" class="bg-brandOrange hover:bg-orange-600 text-white px-6 py-2.5 rounded-lg font-bold transition flex items-center gap-2">
+            <i class="fa-solid fa-cart-plus"></i> Adicionar ao Carrinho
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cart Modal -->
+  <div id="cartModal" class="fixed inset-0 bg-black/60 hidden z-50 flex justify-end transition-opacity">
+    <div class="bg-white w-full max-w-md h-full flex flex-col shadow-2xl">
+      <div class="p-4 bg-brandDark text-white flex justify-between items-center">
+        <h3 class="text-lg font-bold flex items-center gap-2"><i class="fa-solid fa-cart-shopping text-brandOrange"></i> Meu Carrinho</h3>
+        <button onclick="toggleCartModal()" class="text-slate-400 hover:text-white text-xl">&times;</button>
+      </div>
+
+      <div id="cartItemsList" class="flex-grow p-4 overflow-y-auto divide-y divide-slate-100">
+        <!-- Itens do Carrinho -->
+      </div>
+
+      <div class="p-4 border-t bg-slate-50">
+        <div class="flex justify-between items-center mb-4">
+          <span class="text-slate-600 font-medium">Total:</span>
+          <span id="cartTotal" class="text-2xl font-bold text-brandDark">R$ 0,00</span>
+        </div>
+        <button onclick="checkout()" class="w-full bg-brandOrange hover:bg-orange-600 text-white py-3 rounded-lg font-bold transition flex justify-center items-center gap-2">
+          <i class="fa-solid fa-credit-card"></i> Finalizar Compra
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Modal (CRUD Completo) -->
+  <div id="adminModal" class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
+      <div class="p-4 bg-brandDark text-white flex justify-between items-center">
+        <h3 class="text-lg font-bold flex items-center gap-2"><i class="fa-solid fa-wrench text-brandOrange"></i> Gestão de Produtos (Admin)</h3>
+        <button onclick="closeAdminModal()" class="text-slate-400 hover:text-white text-xl">&times;</button>
+      </div>
+      <div class="p-6 overflow-y-auto space-y-6">
+        <form id="productForm" onsubmit="saveProduct(event)" class="space-y-4 bg-slate-50 p-4 rounded-lg border">
+          <div class="flex justify-between items-center">
+            <h4 id="adminFormTitle" class="font-bold text-slate-700">Cadastrar Novo Produto</h4>
+            <button type="button" id="cancelEditBtn" onclick="resetAdminForm()" class="hidden text-xs text-red-600 hover:underline font-semibold">Cancelar Edição</button>
+          </div>
+          <input type="hidden" id="prodId">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input type="text" id="prodNome" placeholder="Nome do Produto" required class="p-2 border rounded text-sm w-full">
+            <input type="number" step="0.01" id="prodPreco" placeholder="Preço (ex: 99.90)" required class="p-2 border rounded text-sm w-full">
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <select id="prodCategoria" class="p-2 border rounded text-sm w-full">
+              <option value="1">Eletrônicos</option>
+              <option value="2">Vestuário</option>
+              <option value="3">Livros</option>
+              <option value="4">Casa</option>
+            </select>
+            <input type="number" id="prodEstoque" placeholder="Quantidade em Estoque" required class="p-2 border rounded text-sm w-full">
+          </div>
+          <input type="text" id="prodImagem" placeholder="URL da Imagem (opcional)" class="p-2 border rounded text-sm w-full">
+          <textarea id="prodDescricao" placeholder="Descrição curta..." class="p-2 border rounded text-sm w-full h-20"></textarea>
+          <button type="submit" id="adminSubmitBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-bold text-sm w-full transition">Cadastrar Produto</button>
+        </form>
+
+        <!-- Lista de Produtos para Editar/Excluir -->
+        <div>
+          <h4 class="font-bold text-slate-700 mb-3">Produtos Cadastrados</h4>
+          <div id="adminProductsList" class="space-y-2 max-h-64 overflow-y-auto pr-1">
+            <!-- Injetado via JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Orders Modal -->
+  <div id="ordersModal" class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+      <div class="p-4 bg-brandDark text-white flex justify-between items-center">
+        <h3 class="text-lg font-bold flex items-center gap-2"><i class="fa-solid fa-list-check text-brandOrange"></i> Acompanhamento de Pedidos (Admin / Cliente)</h3>
+        <button onclick="toggleOrdersModal()" class="text-slate-400 hover:text-white text-xl">&times;</button>
+      </div>
+      <div id="ordersList" class="p-6 overflow-y-auto space-y-4">
+        <!-- Injetado por JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-brandDark text-slate-400 py-6 border-t border-slate-800 text-center text-sm">
+    <div class="max-w-7xl mx-auto px-4">
+      <p>Proposta Acadêmica - Disciplina de Desenvolvimento Web 2 (IFSP) | Prof. Juliano Blanco</p>
+      <p class="text-xs text-slate-500 mt-1">Alunos: Nathan de Oliveira Fonseca e Grupo</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

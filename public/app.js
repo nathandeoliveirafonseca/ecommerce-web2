@@ -14,27 +14,20 @@ async function fetchProducts() {
     renderAdminProductsList();
   } catch (err) {
     console.error('Erro ao carregar produtos:', err);
-    document.getElementById('productCounter').innerText = 'Erro ao carregar produtos.';
   }
 }
 
 function renderProducts() {
   const grid = document.getElementById('productsGrid');
-  const searchInput = document.getElementById('searchInput');
-  const search = searchInput ? searchInput.value.toLowerCase() : '';
+  const search = document.getElementById('searchInput').value.toLowerCase();
   
   const filtered = products.filter(p => {
     const matchesCat = selectedCategory === 'Todas' || p.categoria_nome === selectedCategory;
-    const matchesSearch = p.nome.toLowerCase().includes(search) || (p.descricao && p.descricao.toLowerCase().includes(search));
+    const matchesSearch = p.nome.toLowerCase().includes(search) || p.descricao.toLowerCase().includes(search);
     return matchesCat && matchesSearch;
   });
 
-  const counter = document.getElementById('productCounter');
-  if (counter) {
-    counter.innerText = `${filtered.length} produto(s) encontrado(s)`;
-  }
-
-  if (!grid) return;
+  document.getElementById('productCounter').innerText = `${filtered.length} produto(s) encontrado(s)`;
 
   if (filtered.length === 0) {
     grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-500 font-medium">Nenhum produto encontrado.</div>`;
@@ -47,8 +40,7 @@ function renderProducts() {
       <div class="p-4 flex flex-col flex-grow">
         <span class="text-xs font-semibold uppercase text-brandOrange tracking-wider">${p.categoria_nome || 'Geral'}</span>
         <h4 class="font-bold text-slate-800 text-base mt-1 mb-1 line-clamp-1 cursor-pointer hover:text-brandOrange" onclick="openProductModal(${p.id})">${p.nome}</h4>
-        <p class="text-slate-500 text-xs mb-2 line-clamp-2 flex-grow">${p.descricao || ''}</p>
-        <span class="text-xs font-semibold text-slate-400 mb-4">Estoque disponível: ${p.estoque} un.</span>
+        <p class="text-slate-500 text-xs mb-4 line-clamp-2 flex-grow">${p.descricao}</p>
         <div class="flex items-center justify-between mt-auto">
           <span class="text-lg font-extrabold text-brandDark">R$ ${p.preco.toFixed(2).replace('.', ',')}</span>
           <button onclick="addToCart(${p.id})" class="bg-brandDark hover:bg-brandOrange text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1">
@@ -83,7 +75,6 @@ function openProductModal(id) {
   document.getElementById('modalCategoria').innerText = p.categoria_nome || 'Geral';
   document.getElementById('modalNome').innerText = p.nome;
   document.getElementById('modalDescricao').innerText = p.descricao || 'Sem descrição detalhada.';
-  document.getElementById('modalEstoque').innerText = `Estoque disponível: ${p.estoque} unidades`;
   document.getElementById('modalPreco').innerText = `R$ ${p.preco.toFixed(2).replace('.', ',')}`;
   
   const addBtn = document.getElementById('modalAddBtn');
@@ -104,13 +95,6 @@ function addToCart(id) {
   if (!prod) return;
 
   const existing = cart.find(item => item.id === id);
-  const currentQtyInCart = existing ? existing.qtd : 0;
-
-  if (currentQtyInCart + 1 > prod.estoque) {
-    alert(`Estoque insuficiente! Só existem ${prod.estoque} unidades disponíveis deste produto.`);
-    return;
-  }
-
   if (existing) {
     existing.qtd += 1;
   } else {
@@ -126,28 +110,11 @@ function removeFromCart(id) {
 }
 
 function changeQtd(id, delta) {
-  const prod = products.find(p => p.id === id);
   const item = cart.find(i => i.id === id);
-  
-  if (item && prod) {
-    const newQty = item.qtd + delta;
-    if (newQty > prod.estoque) {
-      alert(`Estoque insuficiente! O máximo disponível é ${prod.estoque} unidades.`);
-      return;
-    }
-    item.qtd = newQty;
+  if (item) {
+    item.qtd += delta;
     if (item.qtd <= 0) removeFromCart(id);
     else updateCartUI();
-  }
-}
-
-function togglePaymentFields(method) {
-  const cardFields = document.getElementById('cartaoFields');
-  if (!cardFields) return;
-  if (method === 'Cartao') {
-    cardFields.classList.remove('hidden');
-  } else {
-    cardFields.classList.add('hidden');
   }
 }
 
@@ -182,18 +149,6 @@ function updateCartUI() {
 
 async function checkout() {
   if (cart.length === 0) return alert('Seu carrinho está vazio!');
-  
-  const selectedPayment = document.querySelector('input[name="pagamento"]:checked');
-  const paymentMethod = selectedPayment ? selectedPayment.value : 'PIX';
-
-  if (paymentMethod === 'Cartao') {
-    const cardNum = document.getElementById('cardNumber').value;
-    if (!cardNum) {
-      alert('Por favor, preencha os dados do cartão para simular o pagamento.');
-      return;
-    }
-  }
-
   const total = cart.reduce((acc, i) => acc + (i.preco * i.qtd), 0);
 
   try {
@@ -204,7 +159,7 @@ async function checkout() {
     });
 
     if (res.ok) {
-      alert(`Pedido realizado com sucesso via ${paymentMethod}!`);
+      alert('Pedido realizado com sucesso!');
       cart = [];
       updateCartUI();
       toggleCartModal();
@@ -216,7 +171,7 @@ async function checkout() {
   }
 }
 
-// --- ADMIN ---
+// --- FUNÇÕES DO PAINEL ADMIN (CRIAR, EDITAR E EXCLUIR) ---
 
 function openAdminModal() {
   resetAdminForm();
@@ -335,7 +290,7 @@ async function deleteProduct(id) {
   }
 }
 
-// --- PEDIDOS ---
+// --- PEDIDOS E CARRINHO ---
 
 async function toggleOrdersModal() {
   const modal = document.getElementById('ordersModal');
@@ -380,7 +335,7 @@ async function updateOrderStatus(orderId, newStatus) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: newStatus })
     });
-    if, (res.ok) {
+    if (res.ok) {
       loadOrders();
     }
   } catch (err) {
