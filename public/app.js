@@ -40,7 +40,8 @@ function renderProducts() {
       <div class="p-4 flex flex-col flex-grow">
         <span class="text-xs font-semibold uppercase text-brandOrange tracking-wider">${p.categoria_nome || 'Geral'}</span>
         <h4 class="font-bold text-slate-800 text-base mt-1 mb-1 line-clamp-1 cursor-pointer hover:text-brandOrange" onclick="openProductModal(${p.id})">${p.nome}</h4>
-        <p class="text-slate-500 text-xs mb-4 line-clamp-2 flex-grow">${p.descricao}</p>
+        <p class="text-slate-500 text-xs mb-2 line-clamp-2 flex-grow">${p.descricao}</p>
+        <span class="text-xs font-semibold text-slate-400 mb-4">Estoque disponível: ${p.estoque} un.</span>
         <div class="flex items-center justify-between mt-auto">
           <span class="text-lg font-extrabold text-brandDark">R$ ${p.preco.toFixed(2).replace('.', ',')}</span>
           <button onclick="addToCart(${p.id})" class="bg-brandDark hover:bg-brandOrange text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1">
@@ -75,6 +76,7 @@ function openProductModal(id) {
   document.getElementById('modalCategoria').innerText = p.categoria_nome || 'Geral';
   document.getElementById('modalNome').innerText = p.nome;
   document.getElementById('modalDescricao').innerText = p.descricao || 'Sem descrição detalhada.';
+  document.getElementById('modalEstoque').innerText = `Estoque disponível: ${p.estoque} unidades`;
   document.getElementById('modalPreco').innerText = `R$ ${p.preco.toFixed(2).replace('.', ',')}`;
   
   const addBtn = document.getElementById('modalAddBtn');
@@ -90,11 +92,19 @@ function toggleProductModal() {
   document.getElementById('productModal').classList.toggle('hidden');
 }
 
+// --- TRAVA DE ESTOQUE NO CARRINHO ---
 function addToCart(id) {
   const prod = products.find(p => p.id === id);
   if (!prod) return;
 
   const existing = cart.find(item => item.id === id);
+  const currentQtyInCart = existing ? existing.qtd : 0;
+
+  if (currentQtyInCart + 1 > prod.estoque) {
+    alert(`Estoque insuficiente! Só existem ${prod.estoque} unidades disponíveis deste produto.`);
+    return;
+  }
+
   if (existing) {
     existing.qtd += 1;
   } else {
@@ -110,11 +120,27 @@ function removeFromCart(id) {
 }
 
 function changeQtd(id, delta) {
+  const prod = products.find(p => p.id === id);
   const item = cart.find(i => i.id === id);
-  if (item) {
-    item.qtd += delta;
+  
+  if (item && prod) {
+    const newQty = item.qtd + delta;
+    if (newQty > prod.estoque) {
+      alert(`Estoque insuficiente! O máximo disponível é ${prod.estoque} unidades.`);
+      return;
+    }
+    item.qtd = newQty;
     if (item.qtd <= 0) removeFromCart(id);
     else updateCartUI();
+  }
+}
+
+function togglePaymentFields(method) {
+  const cardFields = document.getElementById('cartaoFields');
+  if (method === 'Cartao') {
+    cardFields.classList.remove('hidden');
+  } else {
+    cardFields.classList.add('hidden');
   }
 }
 
@@ -149,6 +175,16 @@ function updateCartUI() {
 
 async function checkout() {
   if (cart.length === 0) return alert('Seu carrinho está vazio!');
+  
+  const paymentMethod = document.querySelector('input[name="pagamento"]:checked').value;
+  if (paymentMethod === 'Cartao') {
+    const cardNum = document.getElementById('cardNumber').value;
+    if (!cardNum) {
+      alert('Por favor, preencha os dados do cartão para simular o pagamento.');
+      return;
+    }
+  }
+
   const total = cart.reduce((acc, i) => acc + (i.preco * i.qtd), 0);
 
   try {
@@ -159,7 +195,7 @@ async function checkout() {
     });
 
     if (res.ok) {
-      alert('Pedido realizado com sucesso!');
+      alert(`Pedido realizado com sucesso via ${paymentMethod}!`);
       cart = [];
       updateCartUI();
       toggleCartModal();
@@ -290,7 +326,7 @@ async function deleteProduct(id) {
   }
 }
 
-// --- PEDIDOS E CARRINHO ---
+// --- PEDIDOS ---
 
 async function toggleOrdersModal() {
   const modal = document.getElementById('ordersModal');
