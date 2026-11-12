@@ -11,6 +11,7 @@ async function fetchProducts() {
     const res = await fetch('/api/products');
     products = await res.json();
     renderProducts();
+    renderAdminProductsList();
   } catch (err) {
     console.error('Erro ao carregar produtos:', err);
   }
@@ -35,7 +36,7 @@ function renderProducts() {
 
   grid.innerHTML = filtered.map(p => `
     <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition flex flex-col">
-      <img src="${p.imagem_url || 'https://via.placeholder.com/300'}" alt="${p.nome}" onclick="openProductModal(${p.id})" class="w-full h-48 object-cover bg-slate-100 cursor-pointer">
+      <img src="${p.imagem_url || 'https://via.placeholder.com/300'}" alt="${p.nome}" onclick="openProductModal(${p.id})" class="w-full h-48 object-contain p-3 bg-white border-b border-slate-100 cursor-pointer">
       <div class="p-4 flex flex-col flex-grow">
         <span class="text-xs font-semibold uppercase text-brandOrange tracking-wider">${p.categoria_nome || 'Geral'}</span>
         <h4 class="font-bold text-slate-800 text-base mt-1 mb-1 line-clamp-1 cursor-pointer hover:text-brandOrange" onclick="openProductModal(${p.id})">${p.nome}</h4>
@@ -170,8 +171,85 @@ async function checkout() {
   }
 }
 
+// --- FUNÇÕES DO PAINEL ADMIN (CRIAR, EDITAR E EXCLUIR) ---
+
+function openAdminModal() {
+  resetAdminForm();
+  renderAdminProductsList();
+  document.getElementById('adminModal').classList.remove('hidden');
+}
+
+function closeAdminModal() {
+  document.getElementById('adminModal').classList.add('hidden');
+  resetAdminForm();
+}
+
+function renderAdminProductsList() {
+  const container = document.getElementById('adminProductsList');
+  if (!container) return;
+
+  if (products.length === 0) {
+    container.innerHTML = `<p class="text-xs text-slate-400">Nenhum produto cadastrado.</p>`;
+    return;
+  }
+
+  container.innerHTML = products.map(p => `
+    <div class="flex items-center justify-between p-2.5 border rounded-lg bg-white hover:bg-slate-50 gap-3">
+      <div class="flex items-center gap-3 overflow-hidden">
+        <img src="${p.imagem_url || 'https://via.placeholder.com/60'}" class="w-10 h-10 object-contain rounded border bg-white shrink-0">
+        <div class="truncate">
+          <p class="font-bold text-xs text-slate-800 truncate">${p.nome}</p>
+          <p class="text-xs text-slate-500">R$ ${p.preco.toFixed(2).replace('.', ',')} • Estoque: ${p.estoque}</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <button type="button" onclick="editProduct(${p.id})" class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded text-xs font-semibold transition">
+          <i class="fa-solid fa-pen"></i> Editar
+        </button>
+        <button type="button" onclick="deleteProduct(${p.id})" class="bg-red-600 hover:bg-red-700 text-white px-2.5 py-1 rounded text-xs font-semibold transition">
+          <i class="fa-solid fa-trash"></i> Excluir
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function editProduct(id) {
+  const p = products.find(item => item.id === id);
+  if (!p) return;
+
+  document.getElementById('prodId').value = p.id;
+  document.getElementById('prodNome').value = p.nome;
+  document.getElementById('prodPreco').value = p.preco;
+  document.getElementById('prodCategoria').value = p.categoria_id || 1;
+  document.getElementById('prodEstoque').value = p.estoque;
+  document.getElementById('prodImagem').value = p.imagem_url || '';
+  document.getElementById('prodDescricao').value = p.descricao || '';
+
+  document.getElementById('adminFormTitle').innerText = `Editando Produto #${p.id}`;
+  document.getElementById('cancelEditBtn').classList.remove('hidden');
+
+  const btn = document.getElementById('adminSubmitBtn');
+  btn.innerText = 'Salvar Alterações';
+  btn.classList.remove('bg-green-600', 'hover:bg-green-700');
+  btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+}
+
+function resetAdminForm() {
+  document.getElementById('productForm').reset();
+  document.getElementById('prodId').value = '';
+  document.getElementById('adminFormTitle').innerText = 'Cadastrar Novo Produto';
+  document.getElementById('cancelEditBtn').classList.add('hidden');
+
+  const btn = document.getElementById('adminSubmitBtn');
+  btn.innerText = 'Cadastrar Produto';
+  btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+  btn.classList.add('bg-green-600', 'hover:bg-green-700');
+}
+
 async function saveProduct(e) {
   e.preventDefault();
+  const id = document.getElementById('prodId').value;
   const nome = document.getElementById('prodNome').value;
   const preco = parseFloat(document.getElementById('prodPreco').value);
   const categoria_id = parseInt(document.getElementById('prodCategoria').value);
@@ -179,23 +257,40 @@ async function saveProduct(e) {
   const imagem_url = document.getElementById('prodImagem').value;
   const descricao = document.getElementById('prodDescricao').value;
 
+  const url = id ? `/api/products/${id}` : '/api/products';
+  const method = id ? 'PUT' : 'POST';
+
   try {
-    const res = await fetch('/api/products', {
-      method: 'POST',
+    const res = await fetch(url, {
+      method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ categoria_id, nome, descricao, preco, estoque, imagem_url })
     });
 
     if (res.ok) {
-      alert('Produto cadastrado com sucesso!');
-      document.getElementById('productForm').reset();
-      toggleAdminModal();
+      alert(id ? 'Produto atualizado com sucesso!' : 'Produto cadastrado com sucesso!');
+      resetAdminForm();
       fetchProducts();
     }
   } catch (err) {
     console.error(err);
   }
 }
+
+async function deleteProduct(id) {
+  if (!confirm('Tem certeza que deseja excluir este produto?')) return;
+
+  try {
+    const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      fetchProducts();
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+// --- PEDIDOS E CARRINHO ---
 
 async function toggleOrdersModal() {
   const modal = document.getElementById('ordersModal');
@@ -250,8 +345,4 @@ async function updateOrderStatus(orderId, newStatus) {
 
 function toggleCartModal() {
   document.getElementById('cartModal').classList.toggle('hidden');
-}
-
-function toggleAdminModal() {
-  document.getElementById('adminModal').classList.toggle('hidden');
 }
