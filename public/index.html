@@ -25,7 +25,7 @@
   <!-- Header -->
   <header class="bg-brandDark text-white sticky top-0 z-40 shadow-lg">
     <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-3 cursor-pointer" onclick="selectCategory('Todas')">
         <i class="fa-solid fa-store text-brandOrange text-3xl"></i>
         <h1 class="text-2xl font-bold tracking-tight">TechStore</h1>
       </div>
@@ -82,7 +82,7 @@
       <h3 class="text-xl font-bold text-slate-800 flex items-center gap-2">
         <i class="fa-solid fa-boxes-stacked text-brandOrange"></i> Produtos em Destaque
       </h3>
-      <span id="productCounter" class="text-sm text-slate-5-00">Carregando produtos...</span>
+      <span id="productCounter" class="text-sm text-slate-500">Carregando produtos...</span>
     </div>
 
     <!-- Grid -->
@@ -90,6 +90,25 @@
       <!-- Injetado via JS -->
     </div>
   </main>
+
+  <!-- Product Details Modal -->
+  <div id="productModal" class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden relative">
+      <button onclick="toggleProductModal()" class="absolute top-3 right-3 bg-slate-100 hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center font-bold text-slate-600">&times;</button>
+      <img id="modalImg" src="" alt="" class="w-full h-64 object-cover bg-slate-100">
+      <div class="p-6">
+        <span id="modalCategoria" class="text-xs font-semibold uppercase text-brandOrange tracking-wider"></span>
+        <h3 id="modalNome" class="text-2xl font-bold text-slate-800 mt-1 mb-2"></h3>
+        <p id="modalDescricao" class="text-slate-600 text-sm mb-6 leading-relaxed"></p>
+        <div class="flex items-center justify-between">
+          <span id="modalPreco" class="text-2xl font-extrabold text-brandDark"></span>
+          <button id="modalAddBtn" class="bg-brandOrange hover:bg-orange-600 text-white px-6 py-2.5 rounded-lg font-bold transition flex items-center gap-2">
+            <i class="fa-solid fa-cart-plus"></i> Adicionar ao Carrinho
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Cart Modal -->
   <div id="cartModal" class="fixed inset-0 bg-black/60 hidden z-50 flex justify-end transition-opacity">
@@ -150,7 +169,7 @@
   <div id="ordersModal" class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
       <div class="p-4 bg-brandDark text-white flex justify-between items-center">
-        <h3 class="text-lg font-bold flex items-center gap-2"><i class="fa-solid fa-list-check text-brandOrange"></i> Histórico de Pedidos</h3>
+        <h3 class="text-lg font-bold flex items-center gap-2"><i class="fa-solid fa-list-check text-brandOrange"></i> Acompanhamento de Pedidos (Admin / Cliente)</h3>
         <button onclick="toggleOrdersModal()" class="text-slate-400 hover:text-white text-xl">&times;</button>
       </div>
       <div id="ordersList" class="p-6 overflow-y-auto space-y-4">

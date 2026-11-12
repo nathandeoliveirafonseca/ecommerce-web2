@@ -31,6 +31,15 @@ class OrderRepository {
       });
     });
   }
+
+  async updateStatus(id, status) {
+    return new Promise((resolve, reject) => {
+      db.run("UPDATE pedidos SET status = ? WHERE id = ?", [status, id], function (err) {
+        if (err) reject(err);
+        else resolve({ id, status });
+      });
+    });
+  }
 }
 
 module.exports = new OrderRepository();

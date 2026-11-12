@@ -35,10 +35,10 @@ function renderProducts() {
 
   grid.innerHTML = filtered.map(p => `
     <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition flex flex-col">
-      <img src="${p.imagem_url || 'https://via.placeholder.com/300'}" alt="${p.nome}" class="w-full h-48 object-cover bg-slate-100">
+      <img src="${p.imagem_url || 'https://via.placeholder.com/300'}" alt="${p.nome}" onclick="openProductModal(${p.id})" class="w-full h-48 object-cover bg-slate-100 cursor-pointer">
       <div class="p-4 flex flex-col flex-grow">
         <span class="text-xs font-semibold uppercase text-brandOrange tracking-wider">${p.categoria_nome || 'Geral'}</span>
-        <h4 class="font-bold text-slate-800 text-base mt-1 mb-1 line-clamp-1">${p.nome}</h4>
+        <h4 class="font-bold text-slate-800 text-base mt-1 mb-1 line-clamp-1 cursor-pointer hover:text-brandOrange" onclick="openProductModal(${p.id})">${p.nome}</h4>
         <p class="text-slate-500 text-xs mb-4 line-clamp-2 flex-grow">${p.descricao}</p>
         <div class="flex items-center justify-between mt-auto">
           <span class="text-lg font-extrabold text-brandDark">R$ ${p.preco.toFixed(2).replace('.', ',')}</span>
@@ -64,6 +64,29 @@ function selectCategory(cat) {
 
 function filterProducts() {
   renderProducts();
+}
+
+function openProductModal(id) {
+  const p = products.find(item => item.id === id);
+  if (!p) return;
+
+  document.getElementById('modalImg').src = p.imagem_url || 'https://via.placeholder.com/300';
+  document.getElementById('modalCategoria').innerText = p.categoria_nome || 'Geral';
+  document.getElementById('modalNome').innerText = p.nome;
+  document.getElementById('modalDescricao').innerText = p.descricao || 'Sem descrição detalhada.';
+  document.getElementById('modalPreco').innerText = `R$ ${p.preco.toFixed(2).replace('.', ',')}`;
+  
+  const addBtn = document.getElementById('modalAddBtn');
+  addBtn.onclick = () => {
+    addToCart(p.id);
+    toggleProductModal();
+  };
+
+  toggleProductModal();
+}
+
+function toggleProductModal() {
+  document.getElementById('productModal').classList.toggle('hidden');
 }
 
 function addToCart(id) {
@@ -178,23 +201,50 @@ async function toggleOrdersModal() {
   const modal = document.getElementById('ordersModal');
   modal.classList.toggle('hidden');
   if (!modal.classList.contains('hidden')) {
-    const res = await fetch('/api/orders');
-    const orders = await res.json();
-    const list = document.getElementById('ordersList');
-    if (orders.length === 0) {
-      list.innerHTML = `<div class="text-center py-8 text-slate-500">Nenhum pedido realizado ainda.</div>`;
-    } else {
-      list.innerHTML = orders.map(o => `
-        <div class="border rounded-lg p-4 bg-slate-50 flex justify-between items-center">
-          <div>
-            <span class="font-bold text-slate-800">Pedido #${o.id}</span>
-            <span class="text-xs text-slate-500 block">Data: ${o.data}</span>
-            <span class="text-xs font-semibold px-2 py-0.5 rounded bg-amber-100 text-amber-800 mt-1 inline-block">${o.status}</span>
-          </div>
-          <span class="text-lg font-bold text-brandDark">R$ ${o.total.toFixed(2).replace('.', ',')}</span>
+    loadOrders();
+  }
+}
+
+async function loadOrders() {
+  const res = await fetch('/api/orders');
+  const orders = await res.json();
+  const list = document.getElementById('ordersList');
+  if (orders.length === 0) {
+    list.innerHTML = `<div class="text-center py-8 text-slate-500">Nenhum pedido realizado ainda.</div>`;
+  } else {
+    list.innerHTML = orders.map(o => `
+      <div class="border rounded-lg p-4 bg-slate-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <span class="font-bold text-slate-800">Pedido #${o.id}</span>
+          <span class="text-xs text-slate-500 block">Data: ${o.data}</span>
+          <span class="text-xs font-semibold px-2 py-0.5 rounded bg-amber-100 text-amber-800 mt-1 inline-block">Status: ${o.status}</span>
         </div>
-      `).join('');
+        <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+          <span class="text-base font-bold text-brandDark">R$ ${o.total.toFixed(2).replace('.', ',')}</span>
+          <select onchange="updateOrderStatus(${o.id}, this.value)" class="text-xs p-1 border rounded bg-white">
+            <option value="Pendente" ${o.status === 'Pendente' ? 'selected' : ''}>Pendente</option>
+            <option value="Em Processamento" ${o.status === 'Em Processamento' ? 'selected' : ''}>Em Processamento</option>
+            <option value="Enviado" ${o.status === 'Enviado' ? 'selected' : ''}>Enviado</option>
+            <option value="Entregue" ${o.status === 'Entregue' ? 'selected' : ''}>Entregue</option>
+          </select>
+        </div>
+      </div>
+    `).join('');
+  }
+}
+
+async function updateOrderStatus(orderId, newStatus) {
+  try {
+    const res = await fetch(`/api/orders/${orderId}/status`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus })
+    });
+    if (res.ok) {
+      loadOrders();
     }
+  } catch (err) {
+    console.error(err);
   }
 }
 

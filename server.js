@@ -16,15 +16,17 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Inicializa o banco de dados
 initDb();
 
-// Rotas da API
+// Rotas da API - Produtos
 app.get('/api/products', productController.getAll);
 app.get('/api/products/:id', productController.getById);
 app.post('/api/products', productController.create);
 app.put('/api/products/:id', productController.update);
 app.delete('/api/products/:id', productController.delete);
 
+// Rotas da API - Pedidos
 app.post('/api/orders', orderController.createOrder);
 app.get('/api/orders', orderController.getOrders);
+app.put('/api/orders/:id/status', orderController.updateStatus);
 
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}: http://localhost:${PORT}`);
