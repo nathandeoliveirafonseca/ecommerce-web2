@@ -20,13 +20,8 @@
     }
   </script>
   <style>
-    .no-scrollbar::-webkit-scrollbar {
-      display: none;
-    }
-    .no-scrollbar {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
 <body class="bg-brandLight text-slate-800 flex flex-col min-h-screen relative">
@@ -49,16 +44,16 @@
       </div>
 
       <!-- Action Buttons -->
-      <div class="flex items-center gap-6">
-        <button onclick="openAdminModal()" class="text-slate-300 hover:text-brandOrange flex items-center gap-2 text-sm font-medium">
-          <i class="fa-solid fa-user-gear text-lg"></i> Admin Panel
+      <div class="flex items-center gap-5">
+        <button onclick="openAdminModal()" class="text-slate-300 hover:text-brandOrange flex items-center gap-1.5 text-xs font-medium">
+          <i class="fa-solid fa-user-gear text-base"></i> Admin
         </button>
-        <button onclick="toggleOrdersModal()" class="text-slate-300 hover:text-brandOrange flex items-center gap-2 text-sm font-medium">
-          <i class="fa-solid fa-box text-lg"></i> Meus Pedidos
+        <button onclick="toggleOrdersModal()" class="text-slate-300 hover:text-brandOrange flex items-center gap-1.5 text-xs font-medium">
+          <i class="fa-solid fa-box text-base"></i> Pedidos
         </button>
-        <button onclick="toggleCartModal()" class="relative bg-brandOrange hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 transition">
+        <button onclick="toggleCartModal()" class="relative bg-brandOrange hover:bg-orange-600 text-white px-3 py-1.5 rounded-lg font-semibold flex items-center gap-2 transition text-xs">
           <i class="fa-solid fa-cart-shopping"></i> Carrinho
-          <span id="cartCount" class="bg-white text-brandDark text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+          <span id="cartCount" class="bg-white text-brandDark text-[10px] font-bold px-1.5 py-0.2 rounded-full">0</span>
         </button>
       </div>
     </div>
@@ -74,6 +69,23 @@
       <button onclick="selectCategory('Casa')" class="category-btn hover:text-brandOrange">Casa & Lar</button>
     </div>
   </nav>
+
+<!-- Subcategorias de Eletrônicos -->
+  <div id="subCategoryBar" class="bg-slate-800 text-slate-300 border-b border-slate-700 hidden">
+    <div class="max-w-7xl mx-auto px-4 flex gap-4 overflow-x-auto py-2 text-xs font-semibold">
+      <span class="text-brandOrange uppercase tracking-wider font-bold self-center">Filtro Eletrônicos:</span>
+      <button onclick="selectSubCategory('Todas')" class="subcat-btn hover:text-white text-brandOrange">Todos</button>
+      <button onclick="selectSubCategory('Celular')" class="subcat-btn hover:text-white">Celular</button>
+      <button onclick="selectSubCategory('Notebook')" class="subcat-btn hover:text-white">Notebook</button>
+      <button onclick="selectSubCategory('Fone')" class="subcat-btn hover:text-white">Fone</button>
+      <button onclick="selectSubCategory('Placa de Vídeo')" class="subcat-btn hover:text-white">Placa de Vídeo</button>
+      <button onclick="selectSubCategory('Monitor')" class="subcat-btn hover:text-white">Monitor</button>
+      <button onclick="selectSubCategory('Mouse')" class="subcat-btn hover:text-white">Mouse</button>
+      <button onclick="selectSubCategory('Fonte')" class="subcat-btn hover:text-white">Fonte</button>
+      <button onclick="selectSubCategory('Armazenamento')" class="subcat-btn hover:text-white">Armazenamento</button>
+      <button onclick="selectSubCategory('Outros')" class="subcat-btn hover:text-white">Outros</button>
+    </div>
+  </div>
 
   <!-- Hero Section -->
   <section class="bg-gradient-to-r from-slate-900 to-brandDark text-white py-8 border-b border-slate-700">
@@ -107,13 +119,11 @@
         </div>
       </div>
       <div class="relative">
-        <div id="carouselGrid" class="flex gap-6 overflow-x-auto no-scrollbar scroll-smooth pb-4 pt-1 px-1">
-          <!-- Injetado via JS -->
-        </div>
+        <div id="carouselGrid" class="flex gap-6 overflow-x-auto no-scrollbar scroll-smooth pb-4 pt-1 px-1"></div>
       </div>
     </div>
 
-    <!-- Seção de Todos os Produtos (Grade Normal) -->
+    <!-- Seção de Todos os Produtos -->
     <div>
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h3 class="text-xl font-bold text-slate-800 flex items-center gap-2">
@@ -132,13 +142,146 @@
         </div>
       </div>
 
-      <!-- Grid normal de produtos -->
-      <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        <!-- Injetado via JS -->
-      </div>
+      <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
     </div>
 
   </main>
+
+  <!-- Admin Modal (Com Subcategoria) -->
+  <div id="adminModal" class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
+      <div class="p-4 bg-brandDark text-white flex justify-between items-center">
+        <h3 class="text-lg font-bold flex items-center gap-2"><i class="fa-solid fa-wrench text-brandOrange"></i> Gestão de Produtos (Admin)</h3>
+        <button onclick="closeAdminModal()" class="text-slate-400 hover:text-white text-xl">&times;</button>
+      </div>
+      <div class="p-6 overflow-y-auto space-y-6">
+        
+        <div class="grid grid-cols-3 gap-4">
+          <div class="bg-slate-50 border p-3 rounded-lg text-center">
+            <span class="text-xs text-slate-500 uppercase font-bold">Total Produtos</span>
+            <h4 id="statTotalProducts" class="text-xl font-extrabold text-brandDark mt-1">0</h4>
+          </div>
+          <div class="bg-slate-50 border p-3 rounded-lg text-center">
+            <span class="text-xs text-slate-500 uppercase font-bold">Valor em Estoque</span>
+            <h4 id="statStockValue" class="text-xl font-extrabold text-green-600 mt-1">R$ 0,00</h4>
+          </div>
+          <div class="bg-slate-50 border p-3 rounded-lg text-center">
+            <span class="text-xs text-slate-500 uppercase font-bold">Baixo Estoque</span>
+            <h4 id="statLowStock" class="text-xl font-extrabold text-amber-600 mt-1">0</h4>
+          </div>
+        </div>
+
+        <form id="productForm" onsubmit="saveProduct(event)" class="space-y-4 bg-slate-50 p-4 rounded-lg border">
+          <div class="flex justify-between items-center">
+            <h4 id="adminFormTitle" class="font-bold text-slate-700">Cadastrar Novo Produto</h4>
+            <button type="button" id="cancelEditBtn" onclick="resetAdminForm()" class="hidden text-xs text-red-600 hover:underline font-semibold">Cancelar Edição</button>
+          </div>
+          <input type="hidden" id="prodId">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input type="text" id="prodNome" placeholder="Nome do Produto" required class="p-2 border rounded text-sm w-full">
+            <input type="number" step="0.01" id="prodPreco" placeholder="Preço (ex: 99.90)" required class="p-2 border rounded text-sm w-full">
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <select id="prodCategoria" onchange="checkAdminCategory()" class="p-2 border rounded text-sm w-full">
+              <option value="1">Eletrônicos</option>
+              <option value="2">Vestuário</option>
+              <option value="3">Livros</option>
+              <option value="4">Casa</option>
+            </select>
+            <select id="prodSubcategoria" class="p-2 border rounded text-sm w-full">
+              <option value="Celular">Celular</option>
+              <option value="Notebook">Notebook</option>
+              <option value="Fone">Fone</option>
+              <option value="Placa de Vídeo">Placa de Vídeo</option>
+              <option value="Monitor">Monitor</option>
+              <option value="Mouse">Mouse</option>
+              <option value="Fonte">Fonte</option>
+              <option value="Armazenamento">Armazenamento</option>
+              <option value="Outros">Outros</option>
+            </select>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input type="number" id="prodEstoque" placeholder="Quantidade em Estoque" required class="p-2 border rounded text-sm w-full">
+            <input type="text" id="prodImagem" placeholder="URL da Imagem (opcional)" class="p-2 border rounded text-sm w-full">
+          </div>
+          <textarea id="prodDescricao" placeholder="Descrição curta..." class="p-2 border rounded text-sm w-full h-20"></textarea>
+          <button type="submit" id="adminSubmitBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-bold text-sm w-full transition">Cadastrar Produto</button>
+        </form>
+
+        <div>
+          <h4 class="font-bold text-slate-700 mb-3">Produtos Cadastrados</h4>
+          <div id="adminProductsList" class="space-y-2 max-h-64 overflow-y-auto pr-1"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cart Modal -->
+  <div id="cartModal" class="fixed inset-0 bg-black/60 hidden z-50 flex justify-end transition-opacity">
+    <div class="bg-white w-full max-w-md h-full flex flex-col shadow-2xl">
+      <div class="p-4 bg-brandDark text-white flex justify-between items-center">
+        <h3 class="text-lg font-bold flex items-center gap-2"><i class="fa-solid fa-cart-shopping text-brandOrange"></i> Meu Carrinho</h3>
+        <button onclick="toggleCartModal()" class="text-slate-400 hover:text-white text-xl">&times;</button>
+      </div>
+
+      <div id="cartItemsList" class="flex-grow p-4 overflow-y-auto divide-y divide-slate-100"></div>
+
+      <div class="p-4 border-t bg-slate-50 space-y-3">
+        <h4 class="font-bold text-xs uppercase text-slate-600 tracking-wider">Forma de Pagamento</h4>
+        <div class="grid grid-cols-3 gap-2">
+          <label class="border rounded-lg p-2 text-center cursor-pointer hover:border-brandOrange text-xs font-semibold flex flex-col items-center gap-1 bg-white">
+            <input type="radio" name="pagamento" value="PIX" checked onclick="togglePaymentFields('PIX')">
+            <i class="fa-solid fa-qrcode text-brandOrange text-base"></i> PIX
+          </label>
+          <label class="border rounded-lg p-2 text-center cursor-pointer hover:border-brandOrange text-xs font-semibold flex flex-col items-center gap-1 bg-white">
+            <input type="radio" name="pagamento" value="Boleto" onclick="togglePaymentFields('Boleto')">
+            <i class="fa-solid fa-barcode text-brandOrange text-base"></i> Boleto
+          </label>
+          <label class="border rounded-lg p-2 text-center cursor-pointer hover:border-brandOrange text-xs font-semibold flex flex-col items-center gap-1 bg-white">
+            <input type="radio" name="pagamento" value="Cartao" onclick="togglePaymentFields('Cartao')">
+            <i class="fa-solid fa-credit-card text-brandOrange text-base"></i> Cartão
+          </label>
+        </div>
+
+        <div id="cartaoFields" class="hidden space-y-2 pt-2 border-t">
+          <input type="text" id="cardName" placeholder="Nome no Cartão" class="w-full p-2 border rounded text-xs bg-white">
+          <input type="text" id="cardNumber" placeholder="Número do Cartão" class="w-full p-2 border rounded text-xs bg-white">
+          <div class="grid grid-cols-2 gap-2">
+            <input type="text" id="cardVal" placeholder="Validade (MM/AA)" class="p-2 border rounded text-xs bg-white">
+            <input type="text" id="cardCvv" placeholder="CVV" class="p-2 border rounded text-xs bg-white">
+          </div>
+        </div>
+
+        <div class="flex justify-between items-center pt-2">
+          <span class="text-slate-600 font-medium">Total:</span>
+          <span id="cartTotal" class="text-2xl font-bold text-brandDark">R$ 0,00</span>
+        </div>
+        <button onclick="checkout()" class="w-full bg-brandOrange hover:bg-orange-600 text-white py-3 rounded-lg font-bold transition flex justify-center items-center gap-2">
+          <i class="fa-solid fa-credit-card"></i> Finalizar Compra
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Orders Modal -->
+  <div id="ordersModal" class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+      <div class="p-4 bg-brandDark text-white flex justify-between items-center">
+        <h3 class="text-lg font-bold flex items-center gap-2"><i class="fa-solid fa-list-check text-brandOrange"></i> Acompanhamento de Pedidos</h3>
+        <button onclick="toggleOrdersModal()" class="text-slate-400 hover:text-white text-xl">&times;</button>
+      </div>
+
+      <div class="bg-slate-100 p-3 border-b flex gap-2 overflow-x-auto text-xs font-semibold">
+        <button onclick="filterOrders('Todas')" class="order-filter-btn px-3 py-1.5 rounded bg-brandDark text-white transition">Todos</button>
+        <button onclick="filterOrders('Pendente')" class="order-filter-btn px-3 py-1.5 rounded bg-white text-slate-700 border hover:bg-slate-200 transition">Pendentes</button>
+        <button onclick="filterOrders('Em Processamento')" class="order-filter-btn px-3 py-1.5 rounded bg-white text-slate-700 border hover:bg-slate-200 transition">Processando</button>
+        <button onclick="filterOrders('Enviado')" class="order-filter-btn px-3 py-1.5 rounded bg-white text-slate-700 border hover:bg-slate-200 transition">Enviados</button>
+        <button onclick="filterOrders('Entregue')" class="order-filter-btn px-3 py-1.5 rounded bg-white text-slate-700 border hover:bg-slate-200 transition">Entregues</button>
+      </div>
+
+      <div id="ordersList" class="p-6 overflow-y-auto space-y-4 flex-grow"></div>
+    </div>
+  </div>
 
   <!-- Product Details Modal -->
   <div id="productModal" class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center p-4">
@@ -160,138 +303,6 @@
     </div>
   </div>
 
-  <!-- Cart Modal with Payment Options -->
-  <div id="cartModal" class="fixed inset-0 bg-black/60 hidden z-50 flex justify-end transition-opacity">
-    <div class="bg-white w-full max-w-md h-full flex flex-col shadow-2xl">
-      <div class="p-4 bg-brandDark text-white flex justify-between items-center">
-        <h3 class="text-lg font-bold flex items-center gap-2"><i class="fa-solid fa-cart-shopping text-brandOrange"></i> Meu Carrinho</h3>
-        <button onclick="toggleCartModal()" class="text-slate-400 hover:text-white text-xl">&times;</button>
-      </div>
-
-      <div id="cartItemsList" class="flex-grow p-4 overflow-y-auto divide-y divide-slate-100">
-        <!-- Itens do Carrinho -->
-      </div>
-
-      <!-- Payment Section -->
-      <div class="p-4 border-t bg-slate-50 space-y-3">
-        <h4 class="font-bold text-xs uppercase text-slate-600 tracking-wider">Forma de Pagamento</h4>
-        <div class="grid grid-cols-3 gap-2">
-          <label class="border rounded-lg p-2 text-center cursor-pointer hover:border-brandOrange text-xs font-semibold flex flex-col items-center gap-1 bg-white">
-            <input type="radio" name="pagamento" value="PIX" checked onclick="togglePaymentFields('PIX')">
-            <i class="fa-solid fa-qrcode text-brandOrange text-base"></i> PIX
-          </label>
-          <label class="border rounded-lg p-2 text-center cursor-pointer hover:border-brandOrange text-xs font-semibold flex flex-col items-center gap-1 bg-white">
-            <input type="radio" name="pagamento" value="Boleto" onclick="togglePaymentFields('Boleto')">
-            <i class="fa-solid fa-barcode text-brandOrange text-base"></i> Boleto
-          </label>
-          <label class="border rounded-lg p-2 text-center cursor-pointer hover:border-brandOrange text-xs font-semibold flex flex-col items-center gap-1 bg-white">
-            <input type="radio" name="pagamento" value="Cartao" onclick="togglePaymentFields('Cartao')">
-            <i class="fa-solid fa-credit-card text-brandOrange text-base"></i> Cartão
-          </label>
-        </div>
-
-        <div id="cartaoFields" class="hidden space-y-2 pt-2 border-t">
-          <input type="text" id="cardName" placeholder="Nome no Cartão" class="w-full p-2 border rounded text-xs bg-white">
-          <input type="text" id="cardNumber" placeholder="Número do Cartão (qualquer número)" class="w-full p-2 border rounded text-xs bg-white">
-          <div class="grid grid-cols-2 gap-2">
-            <input type="text" id="cardVal" placeholder="Validade (MM/AA)" class="p-2 border rounded text-xs bg-white">
-            <input type="text" id="cardCvv" placeholder="CVV" class="p-2 border rounded text-xs bg-white">
-          </div>
-        </div>
-
-        <div class="flex justify-between items-center pt-2">
-          <span class="text-slate-600 font-medium">Total:</span>
-          <span id="cartTotal" class="text-2xl font-bold text-brandDark">R$ 0,00</span>
-        </div>
-        <button onclick="checkout()" class="w-full bg-brandOrange hover:bg-orange-600 text-white py-3 rounded-lg font-bold transition flex justify-center items-center gap-2">
-          <i class="fa-solid fa-credit-card"></i> Finalizar Compra
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Admin Modal -->
-  <div id="adminModal" class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
-      <div class="p-4 bg-brandDark text-white flex justify-between items-center">
-        <h3 class="text-lg font-bold flex items-center gap-2"><i class="fa-solid fa-wrench text-brandOrange"></i> Gestão de Produtos (Admin)</h3>
-        <button onclick="closeAdminModal()" class="text-slate-400 hover:text-white text-xl">&times;</button>
-      </div>
-      <div class="p-6 overflow-y-auto space-y-6">
-        
-        <!-- Estatísticas -->
-        <div class="grid grid-cols-3 gap-4">
-          <div class="bg-slate-50 border p-3 rounded-lg text-center">
-            <span class="text-xs text-slate-500 uppercase font-bold">Total Produtos</span>
-            <h4 id="statTotalProducts" class="text-xl font-extrabold text-brandDark mt-1">0</h4>
-          </div>
-          <div class="bg-slate-50 border p-3 rounded-lg text-center">
-            <span class="text-xs text-slate-500 uppercase font-bold">Valor em Estoque</span>
-            <h4 id="statStockValue" class="text-xl font-extrabold text-green-600 mt-1">R$ 0,00</h4>
-          </div>
-          <div class="bg-slate-50 border p-3 rounded-lg text-center">
-            <span class="text-xs text-slate-500 uppercase font-bold">Itens Baixo Estoque</span>
-            <h4 id="statLowStock" class="text-xl font-extrabold text-amber-600 mt-1">0</h4>
-          </div>
-        </div>
-
-        <form id="productForm" onsubmit="saveProduct(event)" class="space-y-4 bg-slate-50 p-4 rounded-lg border">
-          <div class="flex justify-between items-center">
-            <h4 id="adminFormTitle" class="font-bold text-slate-700">Cadastrar Novo Produto</h4>
-            <button type="button" id="cancelEditBtn" onclick="resetAdminForm()" class="hidden text-xs text-red-600 hover:underline font-semibold">Cancelar Edição</button>
-          </div>
-          <input type="hidden" id="prodId">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input type="text" id="prodNome" placeholder="Nome do Produto" required class="p-2 border rounded text-sm w-full">
-            <input type="number" step="0.01" id="prodPreco" placeholder="Preço (ex: 99.90)" required class="p-2 border rounded text-sm w-full">
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <select id="prodCategoria" class="p-2 border rounded text-sm w-full">
-              <option value="1">Eletrônicos</option>
-              <option value="2">Vestuário</option>
-              <option value="3">Livros</option>
-              <option value="4">Casa</option>
-            </select>
-            <input type="number" id="prodEstoque" placeholder="Quantidade em Estoque" required class="p-2 border rounded text-sm w-full">
-          </div>
-          <input type="text" id="prodImagem" placeholder="URL da Imagem (opcional)" class="p-2 border rounded text-sm w-full">
-          <textarea id="prodDescricao" placeholder="Descrição curta..." class="p-2 border rounded text-sm w-full h-20"></textarea>
-          <button type="submit" id="adminSubmitBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-bold text-sm w-full transition">Cadastrar Produto</button>
-        </form>
-
-        <div>
-          <h4 class="font-bold text-slate-700 mb-3">Produtos Cadastrados</h4>
-          <div id="adminProductsList" class="space-y-2 max-h-64 overflow-y-auto pr-1">
-            <!-- Injetado via JS -->
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Orders Modal -->
-  <div id="ordersModal" class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
-      <div class="p-4 bg-brandDark text-white flex justify-between items-center">
-        <h3 class="text-lg font-bold flex items-center gap-2"><i class="fa-solid fa-list-check text-brandOrange"></i> Acompanhamento de Pedidos</h3>
-        <button onclick="toggleOrdersModal()" class="text-slate-400 hover:text-white text-xl">&times;</button>
-      </div>
-
-      <div class="bg-slate-100 p-3 border-b flex gap-2 overflow-x-auto text-xs font-semibold">
-        <button onclick="filterOrders('Todos')" class="order-filter-btn px-3 py-1.5 rounded bg-brandDark text-white transition">Todos</button>
-        <button onclick="filterOrders('Pendente')" class="order-filter-btn px-3 py-1.5 rounded bg-white text-slate-700 border hover:bg-slate-200 transition">Pendentes</button>
-        <button onclick="filterOrders('Em Processamento')" class="order-filter-btn px-3 py-1.5 rounded bg-white text-slate-700 border hover:bg-slate-200 transition">Processando</button>
-        <button onclick="filterOrders('Enviado')" class="order-filter-btn px-3 py-1.5 rounded bg-white text-slate-700 border hover:bg-slate-200 transition">Enviados</button>
-        <button onclick="filterOrders('Entregue')" class="order-filter-btn px-3 py-1.5 rounded bg-white text-slate-700 border hover:bg-slate-200 transition">Entregues</button>
-      </div>
-
-      <div id="ordersList" class="p-6 overflow-y-auto space-y-4 flex-grow">
-        <!-- Injetado via JS -->
-      </div>
-    </div>
-  </div>
-
-  <!-- Footer -->
   <footer class="bg-brandDark text-slate-400 py-6 border-t border-slate-800 text-center text-sm">
     <div class="max-w-7xl mx-auto px-4">
       <p>Proposta Acadêmica - Disciplina de Desenvolvimento Web 2 (IFSP) | Prof. Juliano Blanco</p>
