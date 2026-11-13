@@ -1,16 +1,52 @@
 let products = [];
 let cart = [];
+let orders = [];
 let selectedCategory = 'Todas';
+let currentOrderFilter = 'Todos';
 
 document.addEventListener('DOMContentLoaded', () => {
   fetchProducts();
 });
+
+function scrollCarousel(direction) {
+  const grid = document.getElementById('carouselGrid');
+  if (!grid) return;
+  const scrollAmount = 300; 
+  grid.scrollBy({
+    left: direction * scrollAmount,
+    behavior: 'smooth'
+  });
+}
+
+function showToast(message, type = 'success') {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+
+  const toast = document.createElement('div');
+  const bgColors = type === 'success' ? 'bg-slate-900 text-white border-brandOrange' : 'bg-red-600 text-white border-red-700';
+  const icon = type === 'success' ? '<i class="fa-solid fa-circle-check text-brandOrange"></i>' : '<i class="fa-solid fa-circle-exclamation"></i>';
+
+  toast.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl border-l-4 text-sm font-medium transition-all transform translate-y-2 opacity-0 ${bgColors}`;
+  toast.innerHTML = `${icon} <span>${message}</span>`;
+
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.remove('translate-y-2', 'opacity-0');
+  }, 10);
+
+  setTimeout(() => {
+    toast.classList.add('translate-y-2', 'opacity-0');
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
 
 async function fetchProducts() {
   try {
     const res = await fetch('/api/products');
     products = await res.json();
     renderProducts();
+    updateAdminStats();
     renderAdminProductsList();
   } catch (err) {
     console.error('Erro ao carregar produtos:', err);
@@ -21,19 +57,32 @@ async function fetchProducts() {
 
 function renderProducts() {
   const grid = document.getElementById('productsGrid');
+  const carouselGrid = document.getElementById('carouselGrid');
+  const carouselSection = document.getElementById('carouselSection');
   const searchInput = document.getElementById('searchInput');
   const search = searchInput ? searchInput.value.toLowerCase() : '';
   const sortSelect = document.getElementById('sortSelect');
   const sortBy = sortSelect ? sortSelect.value : 'default';
   
-  // 1. Filtrar por categoria e pesquisa
+  // 1. Controle do Carrossel (Aparece APENAS se estiver em 'Todas' e sem pesquisa ativa)
+  if (selectedCategory === 'Todas' && search === '') {
+    if (carouselSection) carouselSection.classList.remove('hidden');
+    if (carouselGrid) {
+      // Pega alguns produtos aleatórios ou os primeiros para o carrossel
+      const carouselItems = [...products].sort(() => 0.5 - Math.random());
+      carouselGrid.innerHTML = carouselItems.map(p => createProductCard(p, true)).join('');
+    }
+  } else {
+    if (carouselSection) carouselSection.classList.add('hidden');
+  }
+
+  // 2. Filtragem para a Grade Completa Abaixo
   let filtered = products.filter(p => {
     const matchesCat = selectedCategory === 'Todas' || p.categoria_nome === selectedCategory;
     const matchesSearch = p.nome.toLowerCase().includes(search) || (p.descricao && p.descricao.toLowerCase().includes(search));
     return matchesCat && matchesSearch;
   });
 
-  // 2. Ordenar produtos
   if (sortBy === 'az') {
     filtered.sort((a, b) => a.nome.localeCompare(b.nome));
   } else if (sortBy === 'za') {
@@ -56,14 +105,29 @@ function renderProducts() {
     return;
   }
 
-  grid.innerHTML = filtered.map(p => `
-    <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition flex flex-col">
+  grid.innerHTML = filtered.map(p => createProductCard(p, false)).join('');
+}
+
+// Função auxiliar para gerar o HTML do card (usada tanto no carrossel quanto na grade)
+function createProductCard(p, isCarousel) {
+  const lowStockBadge = p.estoque <= 3 && p.estoque > 0 
+    ? `<span class="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse">Últimas unidades!</span>`
+    : `<span class="text-xs font-semibold text-slate-400">Estoque: ${p.estoque} un.</span>`;
+
+  const cardClasses = isCarousel 
+    ? "bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition flex flex-col min-w-[260px] max-w-[260px] flex-shrink-0"
+    : "bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition flex flex-col";
+
+  return `
+    <div class="${cardClasses}">
       <img src="${p.imagem_url || 'https://via.placeholder.com/300'}" alt="${p.nome}" onclick="openProductModal(${p.id})" class="w-full h-48 object-contain p-3 bg-white border-b border-slate-100 cursor-pointer">
       <div class="p-4 flex flex-col flex-grow">
-        <span class="text-xs font-semibold uppercase text-brandOrange tracking-wider">${p.categoria_nome || 'Geral'}</span>
-        <h4 class="font-bold text-slate-800 text-base mt-1 mb-1 line-clamp-1 cursor-pointer hover:text-brandOrange" onclick="openProductModal(${p.id})">${p.nome}</h4>
-        <p class="text-slate-500 text-xs mb-2 line-clamp-2 flex-grow">${p.descricao || ''}</p>
-        <span class="text-xs font-semibold text-slate-400 mb-4">Estoque disponível: ${p.estoque} un.</span>
+        <div class="flex justify-between items-center mb-1">
+          <span class="text-xs font-semibold uppercase text-brandOrange tracking-wider">${p.categoria_nome || 'Geral'}</span>
+          ${lowStockBadge}
+        </div>
+        <h4 class="font-bold text-slate-800 text-base mb-1 line-clamp-1 cursor-pointer hover:text-brandOrange" onclick="openProductModal(${p.id})">${p.nome}</h4>
+        <p class="text-slate-500 text-xs mb-4 line-clamp-2 flex-grow">${p.descricao || ''}</p>
         <div class="flex items-center justify-between mt-auto">
           <span class="text-lg font-extrabold text-brandDark">R$ ${p.preco.toFixed(2).replace('.', ',')}</span>
           <button onclick="addToCart(${p.id})" class="bg-brandDark hover:bg-brandOrange text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1">
@@ -72,7 +136,7 @@ function renderProducts() {
         </div>
       </div>
     </div>
-  `).join('');
+  `;
 }
 
 function selectCategory(cat) {
@@ -114,7 +178,6 @@ function toggleProductModal() {
   document.getElementById('productModal').classList.toggle('hidden');
 }
 
-// --- CONTROLE DE ESTOQUE NO CARRINHO ---
 function addToCart(id) {
   const prod = products.find(p => p.id === id);
   if (!prod) return;
@@ -123,7 +186,7 @@ function addToCart(id) {
   const currentQtyInCart = existing ? existing.qtd : 0;
 
   if (currentQtyInCart + 1 > prod.estoque) {
-    alert(`Estoque insuficiente! Só existem ${prod.estoque} unidades disponíveis deste produto.`);
+    showToast(`Estoque insuficiente! Apenas ${prod.estoque} un. disponíveis.`, 'error');
     return;
   }
 
@@ -133,6 +196,7 @@ function addToCart(id) {
     cart.push({ ...prod, qtd: 1 });
   }
 
+  showToast(`"${prod.nome}" adicionado ao carrinho!`);
   updateCartUI();
 }
 
@@ -148,7 +212,7 @@ function changeQtd(id, delta) {
   if (item && prod) {
     const newQty = item.qtd + delta;
     if (newQty > prod.estoque) {
-      alert(`Estoque insuficiente! O máximo disponível é ${prod.estoque} unidades.`);
+      showToast(`Estoque insuficiente! Máximo de ${prod.estoque} unidades.`, 'error');
       return;
     }
     item.qtd = newQty;
@@ -157,7 +221,6 @@ function changeQtd(id, delta) {
   }
 }
 
-// --- MÉTODOS DE PAGAMENTO ---
 function togglePaymentFields(method) {
   const cardFields = document.getElementById('cartaoFields');
   if (!cardFields) return;
@@ -198,7 +261,7 @@ function updateCartUI() {
 }
 
 async function checkout() {
-  if (cart.length === 0) return alert('Seu carrinho está vazio!');
+  if (cart.length === 0) return showToast('Seu carrinho está vazio!', 'error');
 
   const paymentInput = document.querySelector('input[name="pagamento"]:checked');
   const paymentMethod = paymentInput ? paymentInput.value : 'PIX';
@@ -206,7 +269,7 @@ async function checkout() {
   if (paymentMethod === 'Cartao') {
     const cardNum = document.getElementById('cardNumber').value;
     if (!cardNum) {
-      alert('Por favor, preencha os dados do cartão para simular o pagamento.');
+      showToast('Preencha os dados do cartão para simular o pagamento.', 'error');
       return;
     }
   }
@@ -223,23 +286,38 @@ async function checkout() {
     const data = await res.json();
 
     if (res.ok) {
-      alert(`Pedido realizado com sucesso via ${paymentMethod}!`);
+      showToast(`Pedido realizado com sucesso via ${paymentMethod}!`);
       cart = [];
       updateCartUI();
       toggleCartModal();
       fetchProducts();
     } else {
-      alert(data.error || 'Erro ao processar pedido.');
+      showToast(data.error || 'Erro ao processar pedido.', 'error');
     }
   } catch (err) {
     console.error(err);
   }
 }
 
-// --- ADMIN ---
+// --- ADMIN & ESTATÍSTICAS ---
+
+function updateAdminStats() {
+  const totalProducts = products.length;
+  const stockValue = products.reduce((acc, p) => acc + (p.preco * p.estoque), 0);
+  const lowStockCount = products.filter(p => p.estoque <= 3).length;
+
+  const elTotal = document.getElementById('statTotalProducts');
+  const elValue = document.getElementById('statStockValue');
+  const elLow = document.getElementById('statLowStock');
+
+  if (elTotal) elTotal.innerText = totalProducts;
+  if (elValue) elValue.innerText = `R$ ${stockValue.toFixed(2).replace('.', ',')}`;
+  if (elLow) elLow.innerText = lowStockCount;
+}
 
 function openAdminModal() {
   resetAdminForm();
+  updateAdminStats();
   renderAdminProductsList();
   document.getElementById('adminModal').classList.remove('hidden');
 }
@@ -333,7 +411,7 @@ async function saveProduct(e) {
     });
 
     if (res.ok) {
-      alert(id ? 'Produto atualizado com sucesso!' : 'Produto cadastrado com sucesso!');
+      showToast(id ? 'Produto atualizado com sucesso!' : 'Produto cadastrado com sucesso!');
       resetAdminForm();
       fetchProducts();
     }
@@ -348,6 +426,7 @@ async function deleteProduct(id) {
   try {
     const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
     if (res.ok) {
+      showToast('Produto excluído com sucesso!');
       fetchProducts();
     }
   } catch (err) {
@@ -355,7 +434,7 @@ async function deleteProduct(id) {
   }
 }
 
-// --- PEDIDOS ---
+// --- PEDIDOS E FILTROS ---
 
 async function toggleOrdersModal() {
   const modal = document.getElementById('ordersModal');
@@ -365,32 +444,58 @@ async function toggleOrdersModal() {
   }
 }
 
+function filterOrders(status) {
+  currentOrderFilter = status;
+  document.querySelectorAll('.order-filter-btn').forEach(btn => {
+    btn.classList.remove('bg-brandDark', 'text-white');
+    btn.classList.add('bg-white', 'text-slate-700', 'border');
+    if (btn.innerText.toLowerCase().includes(status.toLowerCase()) || (status === 'Todos' && btn.innerText === 'Todos')) {
+      btn.classList.remove('bg-white', 'text-slate-700', 'border');
+      btn.classList.add('bg-brandDark', 'text-white');
+    }
+  });
+  renderOrdersList();
+}
+
 async function loadOrders() {
-  const res = await fetch('/api/orders');
-  const orders = await res.json();
-  const list = document.getElementById('ordersList');
-  if (orders.length === 0) {
-    list.innerHTML = `<div class="text-center py-8 text-slate-500">Nenhum pedido realizado ainda.</div>`;
-  } else {
-    list.innerHTML = orders.map(o => `
-      <div class="border rounded-lg p-4 bg-slate-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <span class="font-bold text-slate-800">Pedido #${o.id}</span>
-          <span class="text-xs text-slate-500 block">Data: ${o.data}</span>
-          <span class="text-xs font-semibold px-2 py-0.5 rounded bg-amber-100 text-amber-800 mt-1 inline-block">Status: ${o.status}</span>
-        </div>
-        <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-          <span class="text-base font-bold text-brandDark">R$ ${o.total.toFixed(2).replace('.', ',')}</span>
-          <select onchange="updateOrderStatus(${o.id}, this.value)" class="text-xs p-1 border rounded bg-white">
-            <option value="Pendente" ${o.status === 'Pendente' ? 'selected' : ''}>Pendente</option>
-            <option value="Em Processamento" ${o.status === 'Em Processamento' ? 'selected' : ''}>Em Processamento</option>
-            <option value="Enviado" ${o.status === 'Enviado' ? 'selected' : ''}>Enviado</option>
-            <option value="Entregue" ${o.status === 'Entregue' ? 'selected' : ''}>Entregue</option>
-          </select>
-        </div>
-      </div>
-    `).join('');
+  try {
+    const res = await fetch('/api/orders');
+    orders = await res.json();
+    renderOrdersList();
+  } catch (err) {
+    console.error(err);
   }
+}
+
+function renderOrdersList() {
+  const list = document.getElementById('ordersList');
+  if (!list) return;
+
+  const filtered = orders.filter(o => currentOrderFilter === 'Todos' || o.status === currentOrderFilter);
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="text-center py-8 text-slate-500">Nenhum pedido encontrado para o filtro "${currentOrderFilter}".</div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(o => `
+    <div class="border rounded-lg p-4 bg-slate-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div>
+        <span class="font-bold text-slate-800">Pedido #${o.id}</span>
+        <span class="text-xs text-slate-500 block">Data: ${o.data}</span>
+        <span class="text-xs font-semibold px-2 py-0.5 rounded bg-amber-100 text-amber-800 mt-1 inline-block">Status: ${o.status}</span>
+      </div>
+      <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+        <span class="text-base font-bold text-brandDark">R$ ${o.total.toFixed(2).replace('.', ',')}</span>
+        <select onchange="updateOrderStatus(${o.id}, this.value)" class="text-xs p-1 border rounded bg-white">
+          <option value="Pendente" ${o.status === 'Pendente' ? 'selected' : ''}>Pendente</option>
+          <option value="Em Processamento" ${o.status === 'Em Processamento' ? 'selected' : ''}>Em Processamento</option>
+          <option value="Enviado" ${o.status === 'Enviado' ? 'selected' : ''}>Enviado</option>
+          <option value="Entregue" ${o.status === 'Entregue' ? 'selected' : ''}>Entregue</option>
+        </select>
+      </div>
+    </div>
+  `).join('');
 }
 
 async function updateOrderStatus(orderId, newStatus) {
@@ -401,6 +506,7 @@ async function updateOrderStatus(orderId, newStatus) {
       body: JSON.stringify({ status: newStatus })
     });
     if (res.ok) {
+      showToast(`Status do pedido #${orderId} atualizado para ${newStatus}`);
       loadOrders();
     }
   } catch (err) {

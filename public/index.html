@@ -19,8 +19,20 @@
       }
     }
   </script>
+  <style>
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
 </head>
-<body class="bg-brandLight text-slate-800 flex flex-col min-h-screen">
+<body class="bg-brandLight text-slate-800 flex flex-col min-h-screen relative">
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- Header -->
   <header class="bg-brandDark text-white sticky top-0 z-40 shadow-lg">
@@ -76,30 +88,56 @@
     </div>
   </section>
 
-  <!-- Main Content - Products Grid -->
-  <main class="max-w-7xl mx-auto px-4 py-8 flex-grow">
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-      <h3 class="text-xl font-bold text-slate-800 flex items-center gap-2">
-        <i class="fa-solid fa-boxes-stacked text-brandOrange"></i> Produtos em Destaque
-      </h3>
-      
-      <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-        <span id="productCounter" class="text-sm text-slate-500">Carregando produtos...</span>
-        <!-- Seletor de Ordenação -->
-        <select id="sortSelect" onchange="renderProducts()" class="text-xs p-2 border rounded-lg bg-white shadow-sm font-medium text-slate-700 focus:outline-none focus:border-brandOrange">
-          <option value="default">Ordenar por...</option>
-          <option value="az">Nome: A - Z</option>
-          <option value="za">Nome: Z - A</option>
-          <option value="menor-preco">Menor Preço</option>
-          <option value="maior-preco">Maior Preço</option>
-        </select>
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto px-4 py-8 flex-grow space-y-10">
+
+    <!-- Seção do Carrossel (Visível apenas em 'Todas as Categorias') -->
+    <div id="carouselSection">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-fire text-brandOrange"></i> Produtos em Destaque
+        </h3>
+        <div class="flex items-center gap-2">
+          <button onclick="scrollCarousel(-1)" class="w-9 h-9 rounded-full bg-white border border-slate-200 shadow-sm flex items-center justify-center text-slate-700 hover:bg-brandOrange hover:text-white hover:border-brandOrange transition">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+          <button onclick="scrollCarousel(1)" class="w-9 h-9 rounded-full bg-white border border-slate-200 shadow-sm flex items-center justify-center text-slate-700 hover:bg-brandOrange hover:text-white hover:border-brandOrange transition">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+      <div class="relative">
+        <div id="carouselGrid" class="flex gap-6 overflow-x-auto no-scrollbar scroll-smooth pb-4 pt-1 px-1">
+          <!-- Injetado via JS -->
+        </div>
       </div>
     </div>
 
-    <!-- Grid -->
-    <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-      <!-- Injetado via JS -->
+    <!-- Seção de Todos os Produtos (Grade Normal) -->
+    <div>
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <h3 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-boxes-stacked text-brandOrange"></i> Catálogo de Produtos
+        </h3>
+        
+        <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+          <span id="productCounter" class="text-sm text-slate-500">Carregando produtos...</span>
+          <select id="sortSelect" onchange="renderProducts()" class="text-xs p-2 border rounded-lg bg-white shadow-sm font-medium text-slate-700 focus:outline-none focus:border-brandOrange">
+            <option value="default">Ordenar por...</option>
+            <option value="az">Nome: A - Z</option>
+            <option value="za">Nome: Z - A</option>
+            <option value="menor-preco">Menor Preço</option>
+            <option value="maior-preco">Maior Preço</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Grid normal de produtos -->
+      <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <!-- Injetado via JS -->
+      </div>
     </div>
+
   </main>
 
   <!-- Product Details Modal -->
@@ -180,6 +218,23 @@
         <button onclick="closeAdminModal()" class="text-slate-400 hover:text-white text-xl">&times;</button>
       </div>
       <div class="p-6 overflow-y-auto space-y-6">
+        
+        <!-- Estatísticas -->
+        <div class="grid grid-cols-3 gap-4">
+          <div class="bg-slate-50 border p-3 rounded-lg text-center">
+            <span class="text-xs text-slate-500 uppercase font-bold">Total Produtos</span>
+            <h4 id="statTotalProducts" class="text-xl font-extrabold text-brandDark mt-1">0</h4>
+          </div>
+          <div class="bg-slate-50 border p-3 rounded-lg text-center">
+            <span class="text-xs text-slate-500 uppercase font-bold">Valor em Estoque</span>
+            <h4 id="statStockValue" class="text-xl font-extrabold text-green-600 mt-1">R$ 0,00</h4>
+          </div>
+          <div class="bg-slate-50 border p-3 rounded-lg text-center">
+            <span class="text-xs text-slate-500 uppercase font-bold">Itens Baixo Estoque</span>
+            <h4 id="statLowStock" class="text-xl font-extrabold text-amber-600 mt-1">0</h4>
+          </div>
+        </div>
+
         <form id="productForm" onsubmit="saveProduct(event)" class="space-y-4 bg-slate-50 p-4 rounded-lg border">
           <div class="flex justify-between items-center">
             <h4 id="adminFormTitle" class="font-bold text-slate-700">Cadastrar Novo Produto</h4>
@@ -221,7 +276,16 @@
         <h3 class="text-lg font-bold flex items-center gap-2"><i class="fa-solid fa-list-check text-brandOrange"></i> Acompanhamento de Pedidos</h3>
         <button onclick="toggleOrdersModal()" class="text-slate-400 hover:text-white text-xl">&times;</button>
       </div>
-      <div id="ordersList" class="p-6 overflow-y-auto space-y-4">
+
+      <div class="bg-slate-100 p-3 border-b flex gap-2 overflow-x-auto text-xs font-semibold">
+        <button onclick="filterOrders('Todos')" class="order-filter-btn px-3 py-1.5 rounded bg-brandDark text-white transition">Todos</button>
+        <button onclick="filterOrders('Pendente')" class="order-filter-btn px-3 py-1.5 rounded bg-white text-slate-700 border hover:bg-slate-200 transition">Pendentes</button>
+        <button onclick="filterOrders('Em Processamento')" class="order-filter-btn px-3 py-1.5 rounded bg-white text-slate-700 border hover:bg-slate-200 transition">Processando</button>
+        <button onclick="filterOrders('Enviado')" class="order-filter-btn px-3 py-1.5 rounded bg-white text-slate-700 border hover:bg-slate-200 transition">Enviados</button>
+        <button onclick="filterOrders('Entregue')" class="order-filter-btn px-3 py-1.5 rounded bg-white text-slate-700 border hover:bg-slate-200 transition">Entregues</button>
+      </div>
+
+      <div id="ordersList" class="p-6 overflow-y-auto space-y-4 flex-grow">
         <!-- Injetado via JS -->
       </div>
     </div>
