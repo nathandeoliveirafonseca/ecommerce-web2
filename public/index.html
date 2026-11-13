@@ -78,11 +78,22 @@
 
   <!-- Main Content - Products Grid -->
   <main class="max-w-7xl mx-auto px-4 py-8 flex-grow">
-    <div class="flex justify-between items-center mb-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
       <h3 class="text-xl font-bold text-slate-800 flex items-center gap-2">
         <i class="fa-solid fa-boxes-stacked text-brandOrange"></i> Produtos em Destaque
       </h3>
-      <span id="productCounter" class="text-sm text-slate-500">Carregando produtos...</span>
+      
+      <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+        <span id="productCounter" class="text-sm text-slate-500">Carregando produtos...</span>
+        <!-- Seletor de Ordenação -->
+        <select id="sortSelect" onchange="renderProducts()" class="text-xs p-2 border rounded-lg bg-white shadow-sm font-medium text-slate-700 focus:outline-none focus:border-brandOrange">
+          <option value="default">Ordenar por...</option>
+          <option value="az">Nome: A - Z</option>
+          <option value="za">Nome: Z - A</option>
+          <option value="menor-preco">Menor Preço</option>
+          <option value="maior-preco">Maior Preço</option>
+        </select>
+      </div>
     </div>
 
     <!-- Grid -->
@@ -141,7 +152,6 @@
           </label>
         </div>
 
-        <!-- Campos de simulação do cartão -->
         <div id="cartaoFields" class="hidden space-y-2 pt-2 border-t">
           <input type="text" id="cardName" placeholder="Nome no Cartão" class="w-full p-2 border rounded text-xs bg-white">
           <input type="text" id="cardNumber" placeholder="Número do Cartão (qualquer número)" class="w-full p-2 border rounded text-xs bg-white">

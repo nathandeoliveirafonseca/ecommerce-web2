@@ -23,12 +23,26 @@ function renderProducts() {
   const grid = document.getElementById('productsGrid');
   const searchInput = document.getElementById('searchInput');
   const search = searchInput ? searchInput.value.toLowerCase() : '';
+  const sortSelect = document.getElementById('sortSelect');
+  const sortBy = sortSelect ? sortSelect.value : 'default';
   
-  const filtered = products.filter(p => {
+  // 1. Filtrar por categoria e pesquisa
+  let filtered = products.filter(p => {
     const matchesCat = selectedCategory === 'Todas' || p.categoria_nome === selectedCategory;
     const matchesSearch = p.nome.toLowerCase().includes(search) || (p.descricao && p.descricao.toLowerCase().includes(search));
     return matchesCat && matchesSearch;
   });
+
+  // 2. Ordenar produtos
+  if (sortBy === 'az') {
+    filtered.sort((a, b) => a.nome.localeCompare(b.nome));
+  } else if (sortBy === 'za') {
+    filtered.sort((a, b) => b.nome.localeCompare(a.nome));
+  } else if (sortBy === 'menor-preco') {
+    filtered.sort((a, b) => a.preco - b.preco);
+  } else if (sortBy === 'maior-preco') {
+    filtered.sort((a, b) => b.preco - a.preco);
+  }
 
   const counter = document.getElementById('productCounter');
   if (counter) {
